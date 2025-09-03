@@ -1,0 +1,128 @@
+The Big Picture
+You are learning about an Embedded Linux (and RTOS) system built around the Novatek NT9852x chip. Your documents cover:
+
+The Hardware: The NT9852x SoC and its components (boot ROM, cipher engine, DSI, MIPI, etc.)
+
+The Boot Process: How the system starts up, from power-on to a running OS.
+
+The Operating Systems: Linux and RTOS running on the chip.
+
+The Software Development Kits (SDKs): How to write applications for it.
+
+The Peripherals & Drivers: Audio, video, storage, USB, etc.
+
+Recommended Learning Path
+Follow these steps to build your knowledge from the ground up.
+
+Step 1: Foundation - Understand the Hardware and Boot Process
+Before writing code, understand what you're working with. This is the most crucial step.
+
+Start with the SoC Overview:
+
+NT9852x_Affine_User_Guide_en.pdf - This is likely your "high-level" overview. It should explain the chip's main blocks (CPU, GPU, video encoder/decoder, ISP, etc.). Skim this first to know what the chip can do.
+
+Understand How it Boots:
+
+NT9852x_Boot_Rom_code_User_Guide_en.pdf - The first code that runs when power is applied. It reads the boot mode pins and looks for the first-stage bootloader. Essential.
+
+NT9852x_Boot_Loader_User_Guide_en.pdf - This covers nvtboot (the next stage). It initializes more hardware (like DRAM) and loads the final bootloader (U-Boot) or the OS.
+
+NT9852x_nvtboot_User_Guide_en.pdf - Dives deeper into this specific bootloader stage.
+
+NT9852x_Secure_boot_User_Guide_en.pdf / NT9852x Secure_Boot_Flow_User_Guide_en.pdf - Explains how to cryptographically verify each stage of the boot process to prevent running malicious code. Read this after you understand the normal boot flow.
+
+Step 2: The Development Environment - SDKs and OS Guides
+Now you know how it boots, learn how to build software for it.
+
+Choose Your OS and SDK:
+
+For Linux: NT9852x_SDK_Linux_Programming_Guide_en.pdf - This is your master guide. It will explain how to set up the build environment, compile the kernel, root filesystem, and your applications.
+
+For RTOS (Real-Time OS): NT9852x_SDK_RTOS_Programming_Guide_en.pdf - Use this if you're working on a low-latency, real-time application (e.g., certain audio processing tasks). You will likely need both.
+
+NT9852x_SDK_UBoot_Programming_Guide_en.pdf - U-Boot is the powerful bootloader used before Linux starts. This guide is for customizing it.
+
+NT9852x_SDK_OPTEE_User_Guide_en.pdf - OPTEE is a "Trusted Execution Environment" for running secure apps. This is advanced security stuff.
+
+Step 3: Core System Components
+With the basics down, dive into specific subsystems.
+
+Memory and Storage:
+
+NT9852x Memory Map_Linux_User_Guide_en.xls - CRITICAL. This Excel sheet shows how the physical address space is laid out (where DRAM, peripherals, SPI flash, etc., are mapped). Refer to this constantly.
+
+NT9852x_EMMC_User_Guide_en.pdf - For eMMC storage.
+
+NT9852x_SPI-NOR_Support_List_... & NT9852x_SPI-NAND_Support_List_... - Compatibility lists for flash chips.
+
+NT9852x_UBI_Filesystem_User_Guide_en.pdf / Filesystem_User_Guide_en.pdf - UBI/UBIFS is the standard filesystem for raw NAND flash. Very important for embedded devices.
+
+Linux Drivers:
+
+NT9852x_Linux_Driver_User_Guide_en.pdf - A general guide for the Linux drivers provided by Novatek.
+
+NT9852x_RTOS_Driver_User_Guide_en.pdf - The same, but for the RTOS side.
+
+Step 4: Specialized Peripherals and Libraries (Pick based on your project)
+You don't need to read all of these. Focus on what's relevant to your goal.
+
+Audio:
+
+NT9852x_Linux_AudioLib_User_Guide_en.pdf
+
+Novatek_HDAL_Audio_Library_Usage_en.pdf
+
+Novatek_AUDIOLIB_AAC.pdf (Audio Codec)
+
+Novatek_AUDIOLIB_ANR.pdf (Audio Noise Reduction)
+
+Video/Display:
+
+NT9852x_DSI_User_Guide_en.pdf
+
+NT9852x_Graphic_User_Guide_en.pdf
+
+Novatek Panel_User_Guide.pdf
+
+Novatek_MIPI-DSI_Timing_Gen_User_Guide_zh.xlsx (Note: Chinese)
+
+Security:
+
+NT9852x_CIPHER_API_(Security_Engine)_User_Guide_en.pdf - How to use the hardware crypto accelerator.
+
+Connectivity:
+
+Novatek_Host_UVC_Application_Note.pdf - How to make the device act as a USB Video Class device (like a webcam).
+
+Novatek_RNDIS_on_Windows_10_Platform_User_Guide_zh.pdf - USB Ethernet (Note: Chinese)
+
+Tools & Analysis:
+
+Linux - Perf system analysis.pdf - Great for Linux performance profiling.
+
+Storage_Devices_Analysis_Application_Note_en.pdf - Useful for benchmarking storage.
+
+How to Approach Reading
+Skim First, Deep Dive Later: Don't try to memorize everything. Get the gist of what a document contains. Bookmark it and return when you need the details.
+
+Have a Project in Mind: The best way to learn is by doing. A simple goal like "get the SDK to build" or "make an LED blink" will force you to find and understand the relevant information.
+
+Cross-Reference: You'll often need to jump between documents. For example, the SDK guide will tell you to configure U-Boot, which will require the U-Boot guide and the Memory Map.
+
+Language Note: Several documents are in Chinese (_zh.pdf). Use Google Translate or another tool with OCR if you need to access them. The English versions are usually available for the most critical docs.
+
+Suggested First Project
+Goal: Build and run a basic Linux image for a reference board.
+
+Steps:
+
+Read the Boot ROM and Boot Loader guides to understand the initial process.
+
+Follow the NT9852x_SDK_Linux_Programming_Guide_en.pdf to set up your PC's build environment.
+
+Build a simple image. The SDK likely has a default configuration.
+
+Use the NT9852x_Preburn_Image_User_Guide_en.pdf to learn how to flash this image to a device or emulator.
+
+If you get it running, try to modify a simple application and add it to the build.
+
