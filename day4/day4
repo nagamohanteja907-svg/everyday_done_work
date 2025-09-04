@@ -1,3 +1,50 @@
 today morning i have read loader file from sdk
 
 i heard some camera boards are not working (may be they got short because of not wearing gloves)
+
+Of course. This is an excellent question that gets to the heart of low-level firmware booting in embedded systems like IP cameras.
+
+Let's break down the entire sequence and then focus on your specific question about `E/O/I`.
+
+### The High-Level Boot Flow: H -> (E/O/I) -> T
+
+This notation describes the stages the ROM code executes to find a valid and bootable firmware image. It's a fallback hierarchy.
+
+1.  **`H` (Hardware Initialization):**
+    *   This is the very first thing the ROM code does when the chip powers on.
+    *   **What it does:** It initializes the absolute minimum hardware required to load the next stage. This includes:
+        *   Setting up the CPU cores and caches.
+        *   Initializing the clock and power management units.
+        *   Configuring the **boot medium pins** (e.g., setting the I/O pins for SPI flash, eMMC, or SD card).
+        *   It does *not* initialize complex peripherals like video encoders or Ethernet MACs yet.
+
+2.  **`E/O/I` (The "Ethboot" Stage - Boot Source Selection):**
+    *   This is the core of your question. After the basic hardware is up, the ROM code needs to find a bootloader. It does this by checking possible storage sources in a specific order. `E/O/I` represents these sources:
+        *   **`E` (Ethernet / Network Boot):** The ROM code attempts to boot from the network. This is often called **TFTP boot**, **PXE boot**, or in your context, **Ethboot**.
+            *   It will initialize the Ethernet controller, try to get an IP address via DHCP, and then attempt to download a bootloader (e.g., `u-boot.bin`) from a TFTP server specified in the DHCP response.
+            *   **Purpose:** This is primarily used for **factory flashing** and **recovery**. If the flash is empty or corrupted, the camera can still boot from the network, allowing a technician to deploy a new firmware image.
+        *   **`O` (OTG / USB Device Boot):** The ROM code initializes the USB OTG (On-The-Go) controller and waits for a connection from a host PC. The chip will appear as a USB device to the PC.
+            *   The host PC can then use a proprietary tool (provided by the chip vendor, e.g., Rockchip's `rkdeveloptool`, Allwinner's `sunxi-fel`) to send a bootloader directly to the chip over USB and execute it.
+            *   **Purpose:** Another crucial **recovery and development** method. It's extremely useful for initial board bring-up and when no bootloader exists on any other medium.
+        *   **`I` (Internal Memory Boot):** This is the **normal, primary boot path**. The ROM code tries to load the first stage bootloader from a non-volatile memory chip connected to the processor, such as:
+            *   **SPI NOR Flash**
+            *   **eMMC flash** (usually from a specific predefined sector)
+            *   **NAND flash**
+            *   **SD/TF Card**
+            *   The ROM code will read a small block of data (e.g., 512 bytes or 4KB) from a predefined address on this memory. This data contains the first-stage bootloader (e.g., Rockchip's `miniloader`, TI's `X-Loader`, or `U-Boot SPL`) and instructions on how to load it into internal SRAM/DRAM.
+
+    *   **The "Ethboot stage"** refers to the logic where the ROM code sequentially checks these sources (`E` then `O` then `I`, or another order specified by the chip's design, often configurable by boot pins). It uses the first valid source it finds.
+
+3.  **`T` (Transfer Execution / Jump to Loader):**
+    *   Once the ROM code has successfully loaded the bootloader image (from Network, USB, or Flash) into memory (SRAM or DRAM), it jumps to that code's entry point and transfers execution to it.
+    *   The small first-stage bootloader (`SRC` in your previous diagram) then takes over. Its job is to initialize the DRAM controller fully (which the ROM code often does only partially) and then load the much larger, full-featured second-stage bootloader (like `U-Boot` proper) into DRAM.
+    *   Finally, the first-stage bootloader jumps to the second-stage bootloader, which continues the process of loading the Linux kernel and eventually the main application firmware for the IP camera.
+
+---
+
+### Summary in Context of an IP Camera
+
+*   **Normal Operation:** The boot process is `H -> I -> T`. The camera powers on and immediately loads the bootloader from its internal flash memory. This is what happens every time you power on a working camera.
+*   **Recovery/Development Operation:** If the bootloader in flash is corrupted (or if specific boot pins are strapped a certain way), the ROM code will fail at the `I` stage. It will then fall back to the next option, `O` (USB), and wait for a host PC. If no host is connected, it may then try `E` (Ethernet). This allows a developer to recover a "bricked" camera or load a new firmware image without opening the device.
+
+So, **`E/O/I`** is not a single thing but a set of three distinct **boot sources** that the ROM code attempts to use during the "Ethboot stage" to find a valid bootloader image.
